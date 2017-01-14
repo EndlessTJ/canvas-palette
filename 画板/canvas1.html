@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="js/jquery.js"></script>
+    <script src="js/sharp.js"></script>
+    <script src="js/color.js"></script>
+    <link rel="stylesheet" href="draw.css">
+    <script>
+        window.onload=function(){
+            var canvasBox=document.querySelector(".canvas-box");
+            var canvasBoxW=canvasBox.offsetWidth;
+            var canvasBoxH=canvasBox.offsetHeight;
+//            var copy=document.querySelector(".copy");
+            var canvas = document.getElementsByTagName("canvas")[0];
+            var copy = document.getElementsByClassName("copy")[0];
+            var cobj = canvas.getContext("2d");
+            var flag=false;
+            canvas.width=canvasBoxW;
+            canvas.height=canvasBoxH;
+            //菜单操作
+            var drawObj = new Shape(canvas,cobj,copy);
+
+            //画图
+            $(".menu-list:eq(1) .aside-menu-list li").click(function(){
+                if (flag){
+                    drawObj.clearSize=0;
+                }
+                $(".menu-list:eq(1) .aside-menu-list li").css({
+                    "background":" none",
+                    "box-shadow":"none"
+                });
+                $(this).css({
+                    "background":" #eee",
+                    "box-shadow":"inset 0 0 10px #ccc"
+                });
+                var fn=$(this).attr("data-role");
+
+               if (fn!="pen"){
+                   drawObj.type=fn;
+                   drawObj.draw();
+               } else {
+                   drawObj.type=fn;
+                   drawObj.pen();
+               }
+
+            });
+            //画图方式
+            $(".menu-list:eq(2) .aside-menu-list li").click(function(){
+                if (flag){
+                    drawObj.clearSize=0;
+                }
+                var fn=$(this).attr("data-role");
+                drawObj.style=fn;
+                drawObj.draw();
+            });
+            //颜色
+            $(".menu-list:eq(3) .aside-menu-list input").change(function(){
+                if (flag){
+                    drawObj.clearSize=0;
+                }
+                drawObj[$(this).attr("data-role")]="#"+$(this).val();
+//                console.log(typeof $(this).val())
+                if (drawObj.type!="pen"){
+                    drawObj.draw();
+                }else {
+                    drawObj.pen()
+                }
+
+            });
+            //线的粗细
+            $(".menu-list:eq(4) .aside-menu-list li").click(function(){
+                if (flag){
+                    drawObj.clearSize=0;
+                }
+                $(".menu-list:eq(4) .aside-menu-list li").css({
+                    "background":" none",
+                    "box-shadow":"none"
+                });
+                $(this).not(".defin").css({
+                    "background":" #eee",
+                    "box-shadow":"inset 0 0 10px #ccc"
+                });
+                var num=$(this).attr("data-role");
+                if(num!="user-defined"){
+                    drawObj.lineWidth=num;
+                    if (drawObj.type!="pen"){
+                        drawObj.draw();
+                    }else {
+                        drawObj.pen()
+                    }
+                }
+            });
+            $(".menu-list:eq(4) .aside-menu-list li input").change(function () {
+                if (flag){
+                    drawObj.clearSize=0;
+                }
+                var num1=$(this).val();
+                drawObj.lineWidth=num1;
+                if (drawObj.type!="pen"){
+                    drawObj.draw();
+                }else {
+                    drawObj.pen()
+                }
+            });
+
+            /*文件*/
+            //新建
+            $(".menu-list:eq(0) .aside-menu-list li ").click(function(){
+
+                var index=$(this).index();
+                if (index==0){
+                    if (drawObj.history.length>0){
+                        var sel=confirm("是否保存");
+                    }
+                    if (sel){
+                        var url=canvas.toDataURL();
+                        var newUrl=url.replace("image/png","stream/octet");
+                        location.href=newUrl;
+                    }
+                    cobj.clearRect(0,0,canvas.width,canvas.height);
+                    drawObj.history=[];
+                }else if(index==1){
+                    //返回
+                    if (drawObj.history.length==0){
+                        alert("不能再返回了");
+
+
+                        cobj.clearRect(0,0,canvas.width,canvas.height);
+                    }else {
+                        if (drawObj.isback){
+                            if (drawObj.history.length==1){
+                                drawObj.history.pop();
+                                cobj.clearRect(0,0,canvas.width,canvas.height);
+                            }else{
+                                drawObj.history.pop();
+                                cobj.putImageData(drawObj.history[drawObj.history.length-1],0,0);
+                            }
+                        }else {
+                            cobj.putImageData(drawObj.history.pop(),0,0);
+                        }
+                        drawObj.isback=false;
+                    }
+                }
+                else if(index==2){
+                    var urlData=canvas.toDataURL();
+                    var newUrlData=urlData.replace("image/png","stream/octet");
+                    location.href=newUrlData;
+                }
+            });
+            //橡皮擦
+            /*$(".menu .menu-list").eq(5).click(function () {
+                var clearObj=$(".xpc");
+                drawObj.clear(clearObj);
+            });*/
+            $(".menu-list:eq(5) .aside-menu-list li").click(function(){
+                $(".menu-list:eq(5) .aside-menu-list li").css({
+                    "background":" none",
+                    "box-shadow":"none"
+                });
+                $(this).not(".defin").css({
+                    "background":" #eee",
+                    "box-shadow":"inset 0 0 10px #ccc"
+                });
+                var num=$(this).attr("data-role");
+                if(num!="user-defined"){
+                    drawObj.clearSize=num;
+                    var clearObj=$(".xpc");
+                    drawObj.clear(clearObj);
+                    flag=true;
+                }
+            });
+            $(".menu-list:eq(5) .aside-menu-list li input").change(function () {
+                var num1=$(this).val();
+                drawObj.clearSize=num1;
+                var clearObj=$(".xpc");
+                drawObj.clear(clearObj);
+                flag=true;
+            });
+        }
+    </script>
+</head>
+<body>
+<div class="box">
+    <ul class="menu">
+        <li class="menu-list">
+            <ul class="aside-menu-list">
+                <li>新建</li>
+                <li class="iconfont">&#xe631;</li>
+                <li class="iconfont">&#xe633;</li>
+            </ul>
+        </li>
+        <li class="menu-list">
+            <ul class="aside-menu-list">
+                <li data-role="line" class="iconfont">&#xe653;</li>
+                <li data-role="rect" class="iconfont">&#xe6dd;</li>
+                <li data-role="circle">圆</li>
+                <li data-role="bian" class="iconfont">&#xe677;</li>
+                <li data-role="jiao" class="iconfont">&#xe684;</li>
+                <li data-role="pen" class="iconfont">&#xe632;</li>
+            </ul>
+        </li>
+        <li class="menu-list">
+            <ul class="aside-menu-list">
+                <li data-role="stroke" class="model-15" >
+                    <span>描边</span>
+                        <div class="checkbox">
+                            <input type="checkbox"/>
+                            <label></label>
+                        </div>
+                </li>
+                <li data-role="fill" class="model-15">
+                    <span> 填充</span>
+
+                        <div class="checkbox">
+                            <input type="checkbox"/>
+                            <label></label>
+                        </div>
+
+
+                </li>
+            </ul>
+        </li>
+        <li class="menu-list">
+            <ul class="aside-menu-list">
+                <span>边框</span>
+                <input class="jscolor" id="lin" value="ab2567" data-role="strokeStyle">
+                <span>背景</span>
+                <input class="jscolor" id="back" value="ab2567" data-role="fillStyle">
+            </ul></li>
+        <li class="menu-list">
+            <ul class="aside-menu-list">
+                <li data-role="1"><span class="thin"></span></li>
+                <li data-role="3"><span class="center"></span></li>
+                <li data-role="5"><span class="rude"></span></li>
+                <li data-role="user-defined" class="defin"><span style="padding: 0 5px">自定义</span><input type="number" style="width: 110px;"></li>
+            </ul>
+        </li>
+        <li class="menu-list">
+            <ul class="aside-menu-list">
+                <li data-role="25" class="iconfont">&#xe62c;</li>
+                <li data-role="50" class="iconfont">&#xe62c;</li>
+                <li data-role="100" class="iconfont">&#xe62c;</li>
+                <li data-role="user-defined" class="defin"><span style="padding: 0 5px">自定义</span><input type="number" style="width: 110px;"></li>
+            </ul>
+        </li>
+    </ul>
+    <div class="main">
+
+        <div class="canvas-box">
+            <canvas></canvas>
+            <div class="copy"> </div>
+            <div class="xpc"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
